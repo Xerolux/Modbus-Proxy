@@ -46,9 +46,12 @@ def parse_yaml(file_path):
             keys = key.split(".")
             current = config
             for subkey in keys[:-1]:
-                current = current.setdefault(subkey, {})
+                if subkey not in current or not isinstance(current[subkey], dict):
+                    current[subkey] = {}
+                current = current[subkey]
             current[keys[-1]] = value
 
+    print(f"Parsed configuration: {config}")  # Debug output to check the structure
     return config
 
 def load_config():

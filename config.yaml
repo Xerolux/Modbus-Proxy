@@ -1,12 +1,15 @@
+# Proxy configuration
 Proxy:
-  ServerHost: 127.0.0.1
-  ServerPort: 5020
+  ServerHost: 127.0.0.1  # The IP address where the proxy server listens for client connections.
+  ServerPort: 5020       # The port on which the proxy server accepts incoming requests.
 
+# Modbus server settings
 ModbusServer:
-  ModbusServerHost: 192.168.1.100
-  ModbusServerPort: 502
+  ModbusServerHost: 192.168.1.100  # The IP address of the target Modbus server.
+  ModbusServerPort: 502            # The port on which the Modbus server listens.
 
+# Logging configuration
 Logging:
-  Enable: true
-  LogLevel: DEBUG
-  LogFile: modbus_proxy.log
+  Enable: true             # Whether logging is enabled (true) or disabled (false).
+  LogLevel: DEBUG          # The level of log messages to capture (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+  LogFile: modbus_proxy.log # The file to which logs will be written, if logging is enabled.

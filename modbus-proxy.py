@@ -14,7 +14,6 @@ import socket
 import ipaddress
 from concurrent.futures import ThreadPoolExecutor
 
-
 def parse_yaml(file_path):
     """
     Parses a simplified YAML configuration file into a dictionary.
@@ -30,7 +29,7 @@ def parse_yaml(file_path):
                 continue
             if ":" not in line:
                 raise ValueError(f"Invalid YAML syntax in line: {line}")
-            
+
             key, value = line.split(":", 1)
             key = key.strip()
             value = value.strip()
@@ -52,14 +51,18 @@ def parse_yaml(file_path):
 
     return config
 
-
 def load_config():
     """
     Loads and validates the configuration file using the custom YAML parser.
 
     :return: A dictionary containing configuration settings.
     """
-    config = parse_yaml("config.yaml")
+    try:
+        config = parse_yaml("config.yaml")
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"Configuration file not found: {exc}")
+    except ValueError as exc:
+        raise ValueError(f"Error parsing YAML configuration: {exc}")
 
     # Validate Proxy configuration
     try:
@@ -71,7 +74,6 @@ def load_config():
         raise ValueError(f"Invalid port: {config['Proxy']['ServerPort']}")
 
     return config
-
 
 def init_logger(config):
     """
@@ -103,7 +105,6 @@ def init_logger(config):
 
     return logger
 
-
 def handle_client(client_socket, client_address, request_queue, logger):
     """
     Handles a client connection.
@@ -114,6 +115,7 @@ def handle_client(client_socket, client_address, request_queue, logger):
     :param logger: Logger object
     """
     try:
+        client_socket.settimeout(10)  # Set a timeout to prevent indefinite hangs
         logger.info("New client connected: %s", client_address)
         while True:
             data = client_socket.recv(1024)
@@ -125,7 +127,6 @@ def handle_client(client_socket, client_address, request_queue, logger):
         logger.error("Error with client %s: %s", client_address, exc)
     finally:
         client_socket.close()
-
 
 def process_requests(request_queue, config, logger):
     """
@@ -161,7 +162,6 @@ def process_requests(request_queue, config, logger):
             logger.error("Error processing request: %s", exc)
             client_socket.close()
 
-
 def start_server(config):
     """
     Starts the proxy server.
@@ -171,7 +171,7 @@ def start_server(config):
     logger = init_logger(config)
 
     max_queue_size = max(10, min(1000, threading.active_count() * 10))
-    request_queue = queue.Queue(maxsize=max_queue_size)
+    request_queue = queue.SimpleQueue()  # Replace queue.Queue with SimpleQueue
 
     cpu_count = os.cpu_count() or 4
     max_workers = max(4, cpu_count * 2)
@@ -182,6 +182,7 @@ def start_server(config):
             (config["Proxy"]["ServerHost"], config["Proxy"]["ServerPort"])
         )
         server_socket.listen(5)
+        server_socket.settimeout(10)  # Set timeout to prevent indefinite hangs
         logger.info(
             "Proxy server listening on %s:%d",
             config["Proxy"]["ServerHost"],
@@ -202,7 +203,6 @@ def start_server(config):
             logger.error("Server error: %s", exc)
         finally:
             server_socket.close()
-
 
 if __name__ == "__main__":
     try:

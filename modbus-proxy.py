@@ -13,7 +13,6 @@ import logging
 import socket
 import ipaddress
 from concurrent.futures import ThreadPoolExecutor
-
 def parse_yaml(file_path):
     """
     Parses a simplified YAML configuration file into a dictionary.
@@ -27,6 +26,11 @@ def parse_yaml(file_path):
             line = line.strip()
             if not line or line.startswith("#"):  # Skip empty lines and comments
                 continue
+
+            # Remove inline comments
+            if "#" in line:
+                line = line.split("#", 1)[0].strip()
+
             if ":" not in line:
                 raise ValueError(f"Invalid YAML syntax in line: {line}")
 
